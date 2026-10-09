@@ -1,0 +1,110 @@
+{
+  "format_version": 1,
+  "version": 1,
+  "fields": {
+    "pier": {
+      "label": "Pier",
+      "description": "Uber Boat pier to show departures for.",
+      "type": "enum",
+      "default": "930GMIL",
+      "options": [
+        {
+          "value": "930GPUT",
+          "label": "Putney"
+        },
+        {
+          "value": "930GWRQ",
+          "label": "Wandsworth Riverside"
+        },
+        {
+          "value": "930GPLW",
+          "label": "St Mary's Wandsworth"
+        },
+        {
+          "value": "930GCHP",
+          "label": "Chelsea Harbour"
+        },
+        {
+          "value": "930GBSE",
+          "label": "Cadogan"
+        },
+        {
+          "value": "930GBSP",
+          "label": "Battersea Power Station"
+        },
+        {
+          "value": "930GSGW",
+          "label": "Vauxhall"
+        },
+        {
+          "value": "930GMBK",
+          "label": "Millbank"
+        },
+        {
+          "value": "930GWMR",
+          "label": "Westminster"
+        },
+        {
+          "value": "930GWMP",
+          "label": "London Eye Waterloo"
+        },
+        {
+          "value": "930GEMB",
+          "label": "Embankment"
+        },
+        {
+          "value": "930GBFR",
+          "label": "Blackfriars"
+        },
+        {
+          "value": "930GSWK",
+          "label": "Bankside"
+        },
+        {
+          "value": "930GLBR",
+          "label": "London Bridge City"
+        },
+        {
+          "value": "930GTMP",
+          "label": "Tower"
+        },
+        {
+          "value": "930GCAW",
+          "label": "Canary Wharf"
+        },
+        {
+          "value": "930GNEL",
+          "label": "Rotherhithe"
+        },
+        {
+          "value": "930GGLP",
+          "label": "Greenland Surrey Quays"
+        },
+        {
+          "value": "930GMHT",
+          "label": "Masthouse Terrace"
+        },
+        {
+          "value": "930GGNW",
+          "label": "Greenwich"
+        },
+        {
+          "value": "930GMIL",
+          "label": "North Greenwich"
+        },
+        {
+          "value": "930GWRF",
+          "label": "Royal Wharf"
+        },
+        {
+          "value": "930GWAS",
+          "label": "Woolwich Arsenal"
+        },
+        {
+          "value": "930GBRVS",
+          "label": "Barking Riverside"
+        }
+      ]
+    }
+  }
+}

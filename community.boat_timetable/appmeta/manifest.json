@@ -2,7 +2,7 @@
     "format_version": 1,
     "id": "community.boat_timetable",
     "name": "Boat Timetable",
-    "version": "0.3.2",
+    "version": "0.4.0",
     "description": "Live Uber Boat departures, North Greenwich Pier",
     "author": "alex",
     "heap_size_kib": 256,

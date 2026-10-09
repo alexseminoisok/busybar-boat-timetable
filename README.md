@@ -7,9 +7,8 @@ boats at a time, paging through the upcoming ones. It runs **on the bar**
 (JerryScript) and fetches TfL data **itself** over HTTPS — no companion app or
 API key.
 
-> **Made specifically for North Greenwich Pier.** The pier's stop code
-> (`930GMIL`) is built in. It works for any TfL river-bus pier if you change
-> two lines — see [Another pier](#another-pier).
+> **Made specifically for North Greenwich Pier.** It's the default; any other
+> Uber Boat pier can be picked on the bar — see [Choosing a pier](#choosing-a-pier).
 
 ```
 Battersea Power Station  9m
@@ -71,19 +70,25 @@ writes the `js_apps_enabled` flag. Then on the bar: **mode switch → Apps →
 Boat Timetable → Start**. To update after changing files, run the installer
 again and reopen the app.
 
-## Another pier
+## Choosing a pier
 
-Edit `STOP_NAME` and `STOP_ID` at the top of `scripts/main.js`. Pier IDs come
-from `https://api.tfl.gov.uk/StopPoint/Search/<name>?modes=river-bus` (the
-`id`, e.g. `930GMIL`).
+On the bar: **Apps → Boat Timetable → Setup → Pier**, then pick from all 24
+Uber Boat piers (Putney → Barking Riverside, west to east). North Greenwich is
+the default. Reopen the app to apply — settings are read at launch.
+
+The list lives in `build_settings.py`, which generates both
+`appmeta/settings.json` (the Setup picker, max 32 options) and the pier table
+in `scripts/main.js`. Pier IDs are TfL `930G…` stop points
+(`https://api.tfl.gov.uk/Line/rb1/StopPoints`).
 
 ## Layout
 
 ```
 community.boat_timetable/
 ├── anims/     bg_water.anim (animated background)
-├── appmeta/   manifest.json, icon_front_8x8.png, icon_back_11x11.png
+├── appmeta/   manifest.json, settings.json (Setup → Pier), icons
 └── scripts/   main.js
+build_settings.py           # pier list -> settings.json + main.js table
 build_bg_anim.py            # regenerates anims/bg_water.anim (AMP = strength)
 build_icons.py              # regenerates the Apps-menu icons
 install_boat_timetable.sh   # curl installer
