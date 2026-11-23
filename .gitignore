@@ -2,3 +2,11 @@
 __pycache__/
 *.pyc
 .venv/
+node_modules/
+*.log
+
+# build output (busy-cli build)
+dist/
+
+# device captures
+test/shots/

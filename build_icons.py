@@ -3,7 +3,7 @@ import os
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "community.boat_timetable", "appmeta")
+OUT = os.path.join(HERE, "src", "appmeta")
 AMBER = (255, 140, 0, 255)
 DARK = (60, 60, 60, 255)
 WATER = (30, 140, 200, 255)

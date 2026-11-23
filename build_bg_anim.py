@@ -11,7 +11,7 @@ motion completes a whole number of cycles per loop, so it repeats seamlessly.
 A soft limiter keeps the lit water mid-dark (each channel tops out below
 CEIL) so cyan, green, amber, pink and red text all keep their contrast.
 
-Output: community.boat_timetable/anims/bg_water.anim ("bicycle1", encoded with
+Output: src/animations/bg_water.anim ("bicycle1", encoded with
 the firmware's scripts/seq2anim.py — set BSB_FW if the checkout isn't at
 ../busybar-fw-jerryscript).
 
@@ -22,7 +22,7 @@ from pathlib import Path
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "community.boat_timetable", "anims", "bg_water.anim")
+OUT = os.path.join(HERE, "src", "animations", "bg_water.anim")
 
 W, H = 72, 16
 FPS = 25

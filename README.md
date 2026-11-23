@@ -2,18 +2,21 @@
 
 An on-device JavaScript app for the [BUSY Bar](https://busy.app) that shows live
 **Uber Boat** (TfL river bus) departures from **North Greenwich Pier, London**,
-styled like a UK countdown sign: coloured text on a dark grey background, two
-boats at a time, paging through the upcoming ones. It runs **on the bar**
+styled like a UK countdown sign: coloured text over an animated night-river
+background, two boats at a time, paging through the upcoming ones. It runs **on the bar**
 (JerryScript) and fetches TfL data **itself** over HTTPS — no companion app or
 API key.
 
 > **Made specifically for North Greenwich Pier.** It's the default; any other
-> Uber Boat pier can be picked on the bar — see [Choosing a pier](#choosing-a-pier).
+> Uber Boat pier can be picked on the bar — see [Setup](#setup-pier-colour-and-background).
 
-```
-Battersea Power Station  9m
-Barking Riverside       14m
-```
+![Departures on the bar](screenshots/1-departures.png)
+![White text](screenshots/2-white.png)
+![Lilac text](screenshots/3-lilac.png)
+![Amber on gray](screenshots/4-amber-gray.png)
+![Yellow on black](screenshots/5-yellow-black.png)
+
+*72×16 screenshots from a real bar.*
 
 - **Routes:** RB1 (west to Battersea Power Station, east to Barking Riverside)
   and RB6 (to Putney) — whatever TfL predicts for the pier, both directions.
@@ -25,7 +28,7 @@ Barking Riverside       14m
   refreshes. Route numbers (RB1, RB6) aren't shown.
 - **Paging:** automatic — each pair stays up until both destinations have scrolled once
   (min 5 s), then a quick 0.4 s fade brings in the next pair (or a pixel
-  dissolve — set `TRANSITION` in `main.js`).
+  dissolve — set `TRANSITION` in `src/main.js`).
 - **Colours:** cyan by default; white, lilac, green, yellow, amber, pink or
   red in **Setup → Text colour**.
 - **Background:** the river at night: soft blue, teal and indigo glows drifting
@@ -45,34 +48,26 @@ Companion to [busybar-bus-timetable](https://github.com/alexseminoisok/busybar-b
 | **OK** | Refresh now |
 | **Back** | Exit |
 
-## Requirements
-
-A BUSY Bar running firmware that includes the **on-device JS runner** — i.e. the
-runtime that provides the global `listen("input", …)` and `fetch()` APIs and
-lists JS apps in the **Apps** menu. (On official *release* firmware the JS SDK is
-still "coming soon"; this app targets the dev/JS-runner firmware.) The bar needs
-internet access (Wi-Fi) to reach TfL.
-
 ## Install
 
-USB (default address `10.0.4.20`):
+**From the Apps Catalog:** search for Boat Timetable in the BUSY app or on
+apps.busy.app.
+
+**From source** with [busy-cli](https://www.npmjs.com/package/@busy-app/cli)
+(Node 24) and the bar on USB (`10.0.4.20`):
 
 ```bash
-./install_boat_timetable.sh 10.0.4.20
+npm ci
+npm run build          # -> dist/io.github.alexseminoisok.boats.tgz
+npm run app:install    # over Wi-Fi: -- --addr <bar-ip> --password <password>
+npm run app:run
 ```
 
-Wi-Fi (set your HTTP-API password):
+The bar needs HTTP API **27.14.0 or newer** (release firmware 1.3.1) and
+internet access (Wi-Fi) to reach TfL. Then on the bar: **mode switch → Apps →
+Boat Timetable → Start**.
 
-```bash
-BAR_TOKEN=<http-access-password> ./install_boat_timetable.sh <bar-ip>
-```
-
-The script uploads the app to `/ext/user_assets/community.boat_timetable/` and
-writes the `js_apps_enabled` flag. Then on the bar: **mode switch → Apps →
-Boat Timetable → Start**. To update after changing files, run the installer
-again and reopen the app.
-
-## Setup: pier and colour
+## Setup: pier, colour and background
 
 On the bar: **Apps → Boat Timetable → Setup**:
 
@@ -85,23 +80,30 @@ On the bar: **Apps → Boat Timetable → Setup**:
 Reopen the app to apply — settings are read at launch.
 
 The lists live in `build_settings.py`, which generates
-`appmeta/settings.json` (the Setup pickers, max 32 options each) and the pier
-table in `scripts/main.js`; colour and background values are the `THEMES`
-names and `BACKGROUNDS` keys in `main.js`. Pier IDs are TfL `930G…` stop points
+`src/appmeta/settings.json` (the Setup pickers, max 32 options each) and the
+pier table in `src/main.js`; colour and background values are the `THEMES`
+names and `BACKGROUNDS` keys in `src/main.js`. Pier IDs are TfL `930G…` stop points
 (`https://api.tfl.gov.uk/Line/rb1/StopPoints`).
 
 ## Layout
 
 ```
-community.boat_timetable/
-├── anims/     bg_water.anim (animated background)
-├── appmeta/   manifest.json, settings.json (Setup → Pier), icons
-└── scripts/   main.js
-build_settings.py           # pier + colour lists -> settings.json + main.js table
-build_bg_anim.py            # regenerates anims/bg_water.anim (GAIN = strength)
-build_icons.py              # regenerates the Apps-menu icons
-install_boat_timetable.sh   # curl installer
+src/                   the app (busy-cli builds this folder)
+├── main.js
+├── appmeta/           manifest.json, settings.json (Setup), icons
+└── animations/        bg_water.anim (animated background)
+screenshots/           72x16 captures from a real bar (Apps Catalog)
+build_settings.py      pier, colour, background lists -> settings.json + main.js table
+build_bg_anim.py       regenerates bg_water.anim (GAIN = strength, --preview DIR)
+build_icons.py         regenerates the Apps-menu icons
+test/shots.sh          launch with each colour/background, grab screens
+test/shots.py          screen grabs -> exact 72x16 PNGs + contact sheet
 ```
+
+The build scripts need Python 3.10+ with Pillow; `build_bg_anim.py` also needs
+the BUSY Bar firmware checkout for its `.anim` encoder (`scripts/seq2anim.py`,
+set `BSB_FW` if it isn't at `../busybar-fw-jerryscript`). Generated files are
+committed, so `npm run build` alone is enough to build.
 
 ## How it works
 

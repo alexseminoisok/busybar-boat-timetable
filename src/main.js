@@ -21,7 +21,7 @@
 // underneath while it's opaque, then it ramps back down. "dissolve": same, but
 // the overlay covers random pixels instead of fading.
 
-var APP = "community.boat_timetable";
+var APP = "io.github.alexseminoisok.boats";
 var DRAW_URL = "http://127.0.0.1/api/display/draw";
 var TIME_URL = "http://127.0.0.1/api/time";
 
@@ -116,7 +116,7 @@ var THEMES = [
   { name: "lilac",  main: "#C4A2FFFF", dest: "#A282E4FF", dim: "#7C66B4FF" }   // indigo glow
 ];
 // Background: the "background" option in Setup. "animated" = blue glows
-// drifting over the river at night (anims/bg_water.anim, made by
+// drifting over the river at night (animations/bg_water.anim, made by
 // build_bg_anim.py) on deep navy; the firmware plays it natively in a loop,
 // so it costs no draw requests. The others are plain colours. Page-turn fades
 // go through the background colour.
@@ -183,7 +183,7 @@ var BG = { id: "bg", type: "rectangle", display: "front", align: "top_left",
   x: 0, y: 0, width: W, height: H, fill: "solid", fill_colors: [BG_COLOR],
   border_width: 0, z_index: 0 };
 var BG_WATER = { id: "bganim", type: "animation", display: "front", align: "top_left",
-  x: 0, y: 0, path: "anims/bg_water.anim", loop: true, z_index: 1 };
+  x: 0, y: 0, path: "animations/bg_water.anim", loop: true, z_index: 1 };
 
 // Deletes an element on the device: same id/type/payload, with display_until
 // in the past (the canvas service destroys it; type changes are rejected).
