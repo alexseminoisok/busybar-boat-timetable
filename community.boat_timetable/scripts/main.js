@@ -7,8 +7,9 @@
 // Native dev-firmware runtime: draws via fetch -> /api/display/draw, input via
 // listen("input").
 //
-// Controls: encoder = previous/next pair, START = next colour theme,
-// OK = refresh now, BACK = exit.
+// Controls: OK = refresh now, BACK = exit. START and the encoder do nothing;
+// pages turn by themselves. Pier, text colour and background are picked in
+// Apps -> Boat Timetable -> Setup and read once at launch.
 //
 // Layout (each row, all in the 5 px "small" font):
 //   [destination pier, scrolls if long] [mins]   (no route column)
@@ -71,8 +72,11 @@ function loadSettings(done) {
   fetch(SETTINGS_URL)
     .then(function (r) { return r.json(); })
     .then(function (j) {
-      var id = j && j.values && j.values.pier;
+      var v = (j && j.values) || {};
+      var id = v.pier;
       if (id && PIERS.hasOwnProperty(id)) { STOP_ID = id; STOP_NAME = PIERS[id]; }
+      for (var i = 0; i < THEMES.length; i++) if (THEMES[i].name === v.colour) themeIdx = i;
+      if (BACKGROUNDS.hasOwnProperty(v.background)) setBackground(v.background);
       done();
     })
     .catch(function () { done(); });          // no settings yet: default pier
@@ -97,26 +101,34 @@ var MAX_BOATS = 10;          // pages through the next N departures
 var MAX_MINS = 99;
 
 // ── Look ────────────────────────────────────────────────────
-// START cycles the text colour. Per theme: route + minutes, destinations (a
-// touch darker, sets them apart), dim status text. Remembered across launches.
+// Text colour: the "colour" option in Setup (appmeta/settings.json, made by
+// build_settings.py; its values are these theme names). Per theme: minutes,
+// destinations (a touch darker, sets them apart), dim status text.
 var THEMES = [
   { name: "cyan",  main: "#2ED2FFFF", dest: "#1FA2D2FF", dim: "#13617DFF" },
   { name: "green", main: "#3CFF5AFF", dest: "#28C83EFF", dim: "#187A26FF" },
   { name: "amber", main: "#FF8C00FF", dest: "#D46A00FF", dim: "#8C4D00FF" },
   { name: "pink",  main: "#FF4FB4FF", dest: "#D03A8FFF", dim: "#7D2356FF" },
-  { name: "red",   main: "#FF3A2EFF", dest: "#CC2A20FF", dim: "#7A1913FF" }
+  { name: "red",   main: "#FF3A2EFF", dest: "#CC2A20FF", dim: "#7A1913FF" },
+  // picked to sit well on the blue night background
+  { name: "white",  main: "#E8F1FFFF", dest: "#B8C8E0FF", dim: "#6A7A92FF" },  // moonlight
+  { name: "yellow", main: "#FFD83CFF", dest: "#D8B42AFF", dim: "#86701AFF" },  // lamplight
+  { name: "lilac",  main: "#C4A2FFFF", dest: "#A282E4FF", dim: "#7C66B4FF" }   // indigo glow
 ];
-var BG_COLOR = "#1C1C1CFF";
-// Animated background: a very dim, slow river surface (anims/bg_water.anim,
-// made by build_bg_anim.py). The firmware plays it natively in a loop, so it
-// costs no draw requests. false = plain dark grey.
-var BG_ANIM = true;
+// Background: the "background" option in Setup. "animated" = blue glows
+// drifting over the river at night (anims/bg_water.anim, made by
+// build_bg_anim.py) on deep navy; the firmware plays it natively in a loop,
+// so it costs no draw requests. The others are plain colours. Page-turn fades
+// go through the background colour.
+var BACKGROUNDS = {
+  animated: { color: "#03060EFF", anim: true },    // = BASE in build_bg_anim.py
+  gray:     { color: "#1C1C1CFF", anim: false },
+  black:    { color: "#000000FF", anim: false }
+};
+var BG_COLOR = BACKGROUNDS.animated.color;
+var BG_ANIM = BACKGROUNDS.animated.anim;
 
-var themeIdx = 0;        // cyan by default
-try {
-  var savedTheme = parseInt(localStorage.getItem("colour"), 10);
-  if (savedTheme >= 0 && savedTheme < THEMES.length) themeIdx = savedTheme;
-} catch (e) {}
+var themeIdx = 0;        // cyan until the settings arrive
 function theme() { return THEMES[themeIdx]; }
 var FONT = "small";          // busy_regular_5: 5 px caps, 3 px digits
 
@@ -190,10 +202,22 @@ function deleteEl(el) {
 // standard methods. If building ever fails, pages just switch instantly.
 var FULL_MASK = null;
 var MASKS = null;
-try {
-  FULL_MASK = buildFullMask();
-  if (TRANSITION === "dissolve") MASKS = buildMasks();
-} catch (e) { FULL_MASK = null; MASKS = null; }
+function initMasks() {
+  try {
+    FULL_MASK = buildFullMask();
+    MASKS = TRANSITION === "dissolve" ? buildMasks() : null;
+  } catch (e) { FULL_MASK = null; MASKS = null; }
+}
+initMasks();
+
+function setBackground(key) {
+  var b = BACKGROUNDS[key];
+  if (b.color === BG_COLOR && b.anim === BG_ANIM) return;
+  BG_COLOR = b.color;
+  BG_ANIM = b.anim;
+  BG.fill_colors = [BG_COLOR];
+  initMasks();                       // overlays are in the background colour
+}
 
 function xpmHead(ncolors) {
   return "! XPM2\n" + W + " " + H + " " + ncolors + " 1\n";
@@ -343,7 +367,6 @@ function buildFrame() {
 var sent = {};           // id -> {json, el} as last accepted by the device
 var inFlight = false;
 var dirty = false;
-var pendingLed = null;   // "#RRGGBBAA" status-LED blink sent with the next draw
 
 function post(body) {
   return fetch(new Request(DRAW_URL, {
@@ -366,14 +389,10 @@ function render() {
   for (var id in sent) {
     if (!seen[id]) { changed.push(deleteEl(sent[id].el)); commit.push([id, null, null]); }
   }
-  if (changed.length === 0 && pendingLed === null) return;
-  if (changed.length === 0) changed.push(BG);
+  if (changed.length === 0) return;
   var body = { application_name: APP, elements: changed };
-  var led = pendingLed;
-  if (led !== null) { body.led_notification_color = led; pendingLed = null; }
   inFlight = true;
   function done(ok) {
-    if (!ok && led !== null && pendingLed === null) pendingLed = led;   // retry
     if (ok) {
       for (var k = 0; k < commit.length; k++) {
         var c = commit[k];
@@ -394,7 +413,7 @@ function transition(apply) {
   if (!FULL_MASK) { apply(); render(); return; }
   if (fx) {
     // Ride along with the running transition (or queue one right after);
-    // chain so neither a page turn nor a theme change is lost.
+    // chain so no page turn is lost.
     var key = fx.swapped ? "pending" : "apply";
     var prev = fx[key];
     fx[key] = prev ? function () { prev(); apply(); } : apply;
@@ -526,15 +545,7 @@ function prune() {
 
 // ── Input ───────────────────────────────────────────────────
 var unbind = listen("input", function (e) {
-  if (e.key === "encoder") {
-    if (boats.length) showPage(pageIdx + (e.delta > 0 ? 1 : -1), true);
-  } else if (e.key === "start" && e.action === "press") {
-    transition(function () {
-      themeIdx = (themeIdx + 1) % THEMES.length;
-      try { localStorage.setItem("colour", String(themeIdx)); } catch (err) {}
-      pendingLed = theme().main;
-    });
-  } else if (e.key === "ok" && e.action === "press") {
+  if (e.key === "ok" && e.action === "press") {
     refresh();
   } else if (e.key === "back" && e.action === "press") {
     running = false;

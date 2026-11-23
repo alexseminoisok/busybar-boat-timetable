@@ -23,13 +23,15 @@ Barking Riverside       14m
 - **Rows:** two columns — destination pier (" Pier" dropped; scrolls if it
   doesn't fit) and minutes (`due` under a minute), counting down live between
   refreshes. Route numbers (RB1, RB6) aren't shown.
-- **Paging:** each pair stays up until both destinations have scrolled once
+- **Paging:** automatic — each pair stays up until both destinations have scrolled once
   (min 5 s), then a quick 0.4 s fade brings in the next pair (or a pixel
   dissolve — set `TRANSITION` in `main.js`).
-- **Colours:** cyan by default; press **Start** for green, amber, pink, red.
-  The bar remembers your pick.
-- **Background:** a dim, slow "river surface" drifting behind the text, played
-  natively by the bar (set `BG_ANIM = false` in `main.js` for plain grey).
+- **Colours:** cyan by default; white, lilac, green, yellow, amber, pink or
+  red in **Setup → Text colour**.
+- **Background:** the river at night: soft blue, teal and indigo glows drifting
+  over deep navy with a ripple shimmer and a passing moonlight glint (in the
+  style of the BBC News app's background), played natively by the bar.
+  **Setup → Background** switches to plain dark gray or black.
 
 Companion to [busybar-bus-timetable](https://github.com/alexseminoisok/busybar-bus-timetable)
 (same display engine, North Greenwich bus station).
@@ -38,8 +40,8 @@ Companion to [busybar-bus-timetable](https://github.com/alexseminoisok/busybar-b
 
 | Input | Action |
 |-------|--------|
-| **Encoder** | Previous / next pair of boats |
-| **Start** | Next text colour: cyan → green → amber → pink → red |
+| **Encoder** | Nothing (pages turn by themselves) |
+| **Start** | Nothing (colour is in Setup) |
 | **OK** | Refresh now |
 | **Back** | Exit |
 
@@ -70,15 +72,22 @@ writes the `js_apps_enabled` flag. Then on the bar: **mode switch → Apps →
 Boat Timetable → Start**. To update after changing files, run the installer
 again and reopen the app.
 
-## Choosing a pier
+## Setup: pier and colour
 
-On the bar: **Apps → Boat Timetable → Setup → Pier**, then pick from all 24
-Uber Boat piers (Putney → Barking Riverside, west to east). North Greenwich is
-the default. Reopen the app to apply — settings are read at launch.
+On the bar: **Apps → Boat Timetable → Setup**:
 
-The list lives in `build_settings.py`, which generates both
-`appmeta/settings.json` (the Setup picker, max 32 options) and the pier table
-in `scripts/main.js`. Pier IDs are TfL `930G…` stop points
+- **Pier** — pick from all 24 Uber Boat piers (Putney → Barking Riverside,
+  west to east). North Greenwich is the default.
+- **Text colour** — cyan (default), white, lilac, green, yellow, amber, pink
+  or red. White, lilac and yellow are picked to sit on the blue background.
+- **Background** — Animated (default, the river at night), Gray or Black.
+
+Reopen the app to apply — settings are read at launch.
+
+The lists live in `build_settings.py`, which generates
+`appmeta/settings.json` (the Setup pickers, max 32 options each) and the pier
+table in `scripts/main.js`; colour and background values are the `THEMES`
+names and `BACKGROUNDS` keys in `main.js`. Pier IDs are TfL `930G…` stop points
 (`https://api.tfl.gov.uk/Line/rb1/StopPoints`).
 
 ## Layout
@@ -88,8 +97,8 @@ community.boat_timetable/
 ├── anims/     bg_water.anim (animated background)
 ├── appmeta/   manifest.json, settings.json (Setup → Pier), icons
 └── scripts/   main.js
-build_settings.py           # pier list -> settings.json + main.js table
-build_bg_anim.py            # regenerates anims/bg_water.anim (AMP = strength)
+build_settings.py           # pier + colour lists -> settings.json + main.js table
+build_bg_anim.py            # regenerates anims/bg_water.anim (GAIN = strength)
 build_icons.py              # regenerates the Apps-menu icons
 install_boat_timetable.sh   # curl installer
 ```
@@ -108,9 +117,10 @@ install_boat_timetable.sh   # curl installer
 - **Transitions:** an `xpmbitmap` overlay in the background colour sits on
   top; the fade ramps its `opacity` 0→100→0 while the next pair is swapped in
   underneath.
-- **Background:** a looping `animation` element (`bg_water.anim`, 10 s at
-  12 fps, "bicycle1" format via the firmware's `scripts/seq2anim.py`) under
-  the text. The bar plays it itself, so it costs no draw requests — measured
+- **Background:** a looping `animation` element (`bg_water.anim`, 8 s at
+  25 fps, "bicycle1" format via the firmware's `scripts/seq2anim.py`) under
+  the text. A soft limiter caps the glows so every text colour keeps its
+  contrast. The bar plays it itself, so it costs no draw requests — measured
   17 → 19 ms per draw with it running.
 - **Draw:** `POST http://127.0.0.1/api/display/draw` (loopback skips auth),
   sending only changed elements; minutes tick every second.

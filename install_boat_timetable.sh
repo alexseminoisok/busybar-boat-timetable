@@ -55,4 +55,4 @@ fi
 
 echo
 echo "Done. On the bar: flip the mode switch to Apps -> Boat Timetable -> Start."
-echo "Turn the encoder to page through boats; Start changes colour; OK refreshes now."
+echo "OK refreshes now. Pier, colour and background: Apps -> Boat Timetable -> Setup."

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Generate the Pier setting for Boat Timetable from one list.
+"""Generate Boat Timetable's Setup fields (Pier, Text colour, Background).
 
-Writes community.boat_timetable/appmeta/settings.json (the Setup → Pier
-picker on the bar) and rewrites the PIERS table in scripts/main.js between
-its BEGIN/END markers, so the two can't drift apart.
+Writes community.boat_timetable/appmeta/settings.json (the Setup pickers on
+the bar) and rewrites the PIERS table in scripts/main.js between its
+BEGIN/END markers, so the two can't drift apart. Colour values must match
+the theme names in main.js's THEMES, background values the keys of its
+BACKGROUNDS.
 
 IDs are TfL river-bus "NaptanFerryPort" stop points (930G…); one ID covers
 all berths of a pier. Listed west to east along the Thames.
@@ -43,10 +45,31 @@ PIERS = [   # (TfL id, label on the bar; the app adds " Pier" for the stop name)
     ("930GBRVS", "Barking Riverside"),
 ]
 
+COLOURS = [  # (theme name in main.js THEMES, label on the bar)
+    ("cyan", "Cyan"),
+    ("white", "White"),      # moonlight
+    ("lilac", "Lilac"),      # matches the indigo glow
+    ("green", "Green"),
+    ("yellow", "Yellow"),    # lamplight on the water
+    ("amber", "Amber"),
+    ("pink", "Pink"),
+    ("red", "Red"),
+]
+DEFAULT_COLOUR = "cyan"
+
+BACKGROUNDS = [  # (key in main.js BACKGROUNDS, label on the bar)
+    ("animated", "Animated"),
+    ("gray", "Gray"),
+    ("black", "Black"),
+]
+DEFAULT_BACKGROUND = "animated"
+
 
 def write_settings():
     assert len(PIERS) <= 32, "the bar's enum picker allows at most 32 options"
     assert DEFAULT in dict(PIERS)
+    assert DEFAULT_COLOUR in dict(COLOURS)
+    assert DEFAULT_BACKGROUND in dict(BACKGROUNDS)
     schema = {
         "format_version": 1,
         "version": 1,
@@ -57,14 +80,30 @@ def write_settings():
                 "type": "enum",
                 "default": DEFAULT,
                 "options": [{"value": pid, "label": label} for pid, label in PIERS],
-            }
+            },
+            "colour": {
+                "label": "Text colour",
+                "description": "Colour of the departures text.",
+                "type": "enum",
+                "default": DEFAULT_COLOUR,
+                "options": [{"value": v, "label": label} for v, label in COLOURS],
+            },
+            "background": {
+                "label": "Background",
+                "description": "Animated river at night, or plain dark gray or black.",
+                "type": "enum",
+                "default": DEFAULT_BACKGROUND,
+                "options": [{"value": v, "label": label} for v, label in BACKGROUNDS],
+            },
         },
     }
     path = os.path.join(APP, "appmeta", "settings.json")
     with open(path, "w") as f:
         json.dump(schema, f, indent=2)
         f.write("\n")
-    print(f"Wrote {os.path.relpath(path, HERE)} ({len(PIERS)} piers, default {DEFAULT})")
+    print(f"Wrote {os.path.relpath(path, HERE)} ({len(PIERS)} piers, default {DEFAULT}; "
+          f"{len(COLOURS)} colours, default {DEFAULT_COLOUR}; "
+          f"{len(BACKGROUNDS)} backgrounds, default {DEFAULT_BACKGROUND})")
 
 
 def write_js_table():
